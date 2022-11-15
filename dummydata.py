@@ -57,22 +57,18 @@ fake_patients = [
         'mrn': str(uuid.uuid4())[:7], 
         'last_name':fake.last_name(), 
         'first_name':fake.first_name(),
-        'middle_name': fake.random_element(elements=('L, R, G, J, A, M, V, W, T, D, E, S, P, C, n/a')),
-        'dob':(fake.date_between(start_date='-28y', end_date='-57y')).strftime("%Y-%m-%d"),
+        'middle_name': fake.random_element(elements=('L', 'R', 'G', 'J', 'A', 'M', 'V', 'W', 'T', 'D', 'E', 'S', 'P', 'C', 'n/a')),
+        'dob':(fake.date_between(start_date='-94y', end_date='-65y')).strftime("%Y-%m-%d"),
         'address1': fake.street_address(),
         'city': fake.city(),
         'state': fake.state(),
         'zip':fake.zipcode(),
         'phone':fake.phone_number(),
         'cell':fake.phone_number(),
-        'ed_arrival':(fake.date_between(start_date='-21y', end_date='-22y')).strftime("%Y-%m-%d"),
-        'admit': fake.random_element(elements=('yes')),
-        'discharge':(fake.date_between(start_date='-21y', end_date='-22y')).strftime("%Y-%m-%d")
+        'ed_arrival':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d"),
+        'discharge':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d")
 
-
-
-     
-    } for x in range(100)] ## generate 50 patients
+} for x in range(100)] ## generate 100 patients
 
 df_fake_patients = pd.DataFrame(fake_patients)
 ## drop duplicate mrns (in the case that there are) because mrns should be unique
@@ -80,17 +76,18 @@ df_fake_patients = df_fake_patients.drop_duplicates(subset=['acct'])
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['mrn'])
 
 
-insertQuery = "INSERT INTO patients ('acct', 'mrn', 'last_name', 'first_name', 'middle_name', 'dob', 'address1', 'city', 'state', 'zip', 'phone', 'cell', 'ed_arrival', 'admit', 'discharge') VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
+insertQuery = "INSERT INTO patients (acct, mrn, last_name, first_name, middle_name, dob, address1, city, state, zip, phone, cell, ed_arrival, discharge) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
 
 
 for index, row in df_fake_patients.iterrows():
-    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['admit'], row['discharge']))
+    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['discharge']))
     print("inserted row: ", index)
 
 df_azure = pd.read_sql_query("SELECT * FROM patients", db_azure)
 
 df_azure ## we'll use df_azure to check that our populated tables went through. we can redefine it repeatedly as we proceed
 
+df_azure.to_csv("./patients.csv")
 
 ## Medications
 
