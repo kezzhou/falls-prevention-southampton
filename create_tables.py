@@ -25,7 +25,6 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
-connection_string_azure = 'mysql+pymysql://zhou:ahi2022!@mysql-testenvironment.mysql.database.azure.com:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 
@@ -86,7 +85,6 @@ create table if not exists patients (
     last_name varchar(255) default null,
     first_name varchar(255) default null,
     middle_name varchar(255) default null,
-    full_name varchar(255) default null,
     dob varchar(255) default null,
     age varchar(255) default null,
     address1 varchar(255) default null,
@@ -101,7 +99,7 @@ create table if not exists patients (
     discharge varchar(255) default null,
     er_disposition varchar(255) default null,
     final_disch_disposition varchar(255) default null,
-    final_disch_disposition_desc varchar(255) default null,
+    final_disch_disp_desc varchar(255) default null,
     pcp_number varchar(255) default null,
     pcp_name varchar(255) default null,
     er_log_chief_complaint varchar(255) default null,

@@ -50,14 +50,15 @@ print(db_azure.table_names()) ## we should see 1
 
 fake = Faker()
 
-fake_patients = [
-    {
+fake_patients = [ {
         ## keep just the first 8 characters of the uuid
         'acct': str(uuid.uuid4())[:7], 
-        'mrn': str(uuid.uuid4())[:7], 
+        'mrn': str(uuid.uuid4())[:6],
+        'svc': fake.random_element(elements=('s', 'er', 'm', 'o')),
+        'stay_type': fake.random_element(elements=('er', 'op')), 
         'last_name':fake.last_name(), 
         'first_name':fake.first_name(),
-        'middle_name': fake.random_element(elements=('L', 'R', 'G', 'J', 'A', 'M', 'V', 'W', 'T', 'D', 'E', 'S', 'P', 'C', 'n/a')),
+        'middle_name': fake.random_element(elements=('L', 'R', 'G', 'J', 'A', 'M', 'V', 'W', 'T', 'D', 'E', 'S', 'P', 'C', '')),
         'dob':(fake.date_between(start_date='-94y', end_date='-65y')).strftime("%Y-%m-%d"),
         'address1': fake.street_address(),
         'city': fake.city(),
@@ -66,7 +67,14 @@ fake_patients = [
         'phone':fake.phone_number(),
         'cell':fake.phone_number(),
         'ed_arrival':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d"),
-        'discharge':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d")
+        'discharge':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d"),
+        'er_disposition': fake.random_element(elements=('home', 'fasttrac')),
+        'final_disch_disp_desc': fake.random_element(elements=('DISCHARGED HOME FROM HOSPITAL FAST TRACK AREA', 'DISCHARGED TO HOME OR SELF CARE (ROUTINE DISCHARGE)', 'DISCHARGED TO SKILLED NURSING FACILITY FOR SKILLED CARE(SNF)', 'DISCH HOME UNDER CARE OF HOME HEALTH AGENCY ANTICIPATING SNF')),
+        'pcp_number': str(uuid.uuid4())[:6],
+        'pcp_name':fake.name(),
+        'er_log_chief_complaint': fake.random_element(elements=('arrythmia', 'seizure', 'fall', '')),
+        'cpsi_chief_complaint': fake.random_element(elements=('fall', ''))
+
 
 } for x in range(100)] ## generate 100 patients
 
@@ -76,11 +84,11 @@ df_fake_patients = df_fake_patients.drop_duplicates(subset=['acct'])
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['mrn'])
 
 
-insertQuery = "INSERT INTO patients (acct, mrn, last_name, first_name, middle_name, dob, address1, city, state, zip, phone, cell, ed_arrival, discharge) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
+insertQuery = "INSERT INTO patients (acct, mrn, svc, stay_type, last_name, first_name, middle_name, dob, address1, city, state, zip, phone, cell, ed_arrival, discharge, er_disposition, final_disch_disp_desc, pcp_number, pcp_name, er_log_chief_complaint, cpsi_chief_complaint) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
 
 
 for index, row in df_fake_patients.iterrows():
-    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['discharge']))
+    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['svc'], row['stay_type'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['discharge'], row['er_disposition'], row['final_disch_disp_desc'], row['pcp_number'], row['pcp_name'], row['er_log_chief_complaint'], row['cpsi_chief_complaint']))
     print("inserted row: ", index)
 
 df_azure = pd.read_sql_query("SELECT * FROM patients", db_azure)
