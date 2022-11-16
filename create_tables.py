@@ -85,6 +85,7 @@ create table if not exists patients (
     last_name varchar(255) default null,
     first_name varchar(255) default null,
     middle_name varchar(255) default null,
+    full_name varchar(255) default null,
     dob varchar(255) default null,
     age varchar(255) default null,
     address1 varchar(255) default null,
@@ -107,6 +108,30 @@ create table if not exists patients (
     PRIMARY KEY (id) 
 ); 
 """
+
+## Raw Geo Location Data
+
+create_table_geo = """
+create table if not exists geo (
+    id int auto_increment,
+    lat float( 10, 8 ) default null,
+    lon float( 10, 8 ) default null,
+    PRIMARY KEY (id)
+); 
+"""
+
+## Patient Location Data
+
+create_table_patient_geo = """
+create table if not exists patient_geo (
+    id int auto_increment,
+    mrn varchar(255) default null,
+    lat float( 10, 8 ) default null,
+    lon float( 10, 8 ) default null,
+    PRIMARY KEY (id)
+); 
+"""
+
 ## we use null unique to signify that there should be no repeating values
 ## this will be prevalent with unique identifiers, whether it's drug codes or social determinant codes
 ## we use default null to signify that the default value for an empty cell is null
@@ -117,5 +142,7 @@ create table if not exists patients (
 #### Execute our written commands with Python ####
 
 db_azure.execute(create_table_patients)
+db_azure.execute(create_table_geo)
+db_azure.execute(create_table_patient_geo)
 
 print(db_azure.table_names()) ## we can check if our tables went through successfully

@@ -30,7 +30,6 @@ AZURE_MYSQL_DATABASE = os.getenv("AZURE_MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
-connection_string_azure = 'mysql+pymysql://zhou:ahi2022!@mysql-testenvironment.mysql.database.azure.com:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 
@@ -51,7 +50,7 @@ print(db_azure.table_names()) ## we should see 1
 fake = Faker()
 
 fake_patients = [ {
-        ## keep just the first 8 characters of the uuid
+        ## keep just the first few characters of the uuid depending on specific length
         'acct': str(uuid.uuid4())[:7], 
         'mrn': str(uuid.uuid4())[:6],
         'svc': fake.random_element(elements=('s', 'er', 'm', 'o')),
@@ -97,7 +96,38 @@ df_azure ## we'll use df_azure to check that our populated tables went through. 
 
 df_azure.to_csv("./patients.csv")
 
-## Medications
+
+
+
+
+
+## Patient Geo Data
+
+fake = Faker()
+
+fake_geo = [ {
+        'lat': fake.coordinate(center=40.8852, radius=0.01),
+        'lon': fake.coordinate(center=-72.3802, radius=0.01)
+
+} for x in range(100)] ## generate 100 coordinates
+
+df_fake_geo = pd.DataFrame(fake_geo)
+## drop duplicate mrns (in the case that there are) because mrns should be unique
+df_fake_geo = df_fake_geo.drop_duplicates(subset=['lat', 'lon'])
+
+
+insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)" 
+
+
+for index, row in df_fake_geo.iterrows():
+    db_azure.execute(insertQuery, (row['lat'], row['lon']))
+    print("inserted row: ", index)
+
+df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
+
+df_azure
+
+df_azure.to_csv('./geo.csv')
 
 ## id int auto_increment, ndc varchar(255) null unique, generic varchar(255) default null, active_ingredients varchar(255) default null
 
