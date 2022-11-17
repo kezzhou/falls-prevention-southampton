@@ -25,6 +25,7 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
+connection_string_azure = 'mysql+pymysql://zhou:ahi2022!@mysql-testenvironment.mysql.database.azure.com:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 
@@ -49,25 +50,8 @@ def droppingFunction_all(dbList, db_source):
     else:
         print(f'task completed')
 
-disable_foreign_key = """
-SET FOREIGN_KEY_CHECKS=0
-;
-"""
+droppingFunction_all(db_azure.table_names(), db_azure) ## Dropping function
 
-## first we disable foreign key so that we can drop tables that are linked via foreign key
-
-reenable_foreign_key = """
-SET FOREIGN_KEY_CHECKS=1
-;
-"""
-
-## then we reenable foreign key checks so that our tables function properly
-
-db_azure.execute(disable_foreign_key)
-
-droppingFunction_all(db_azure.table_names(), db_azure) ## after defining the function we apply it to all table names found in our db connection
-
-db_azure.execute(reenable_foreign_key)
 
 print(db_azure.table_names())
 
@@ -85,7 +69,6 @@ create table if not exists patients (
     last_name varchar(255) default null,
     first_name varchar(255) default null,
     middle_name varchar(255) default null,
-    full_name varchar(255) default null,
     dob varchar(255) default null,
     age varchar(255) default null,
     address1 varchar(255) default null,
@@ -114,20 +97,22 @@ create table if not exists patients (
 create_table_geo = """
 create table if not exists geo (
     id int auto_increment,
-    lat float( 10, 8 ) default null,
-    lon float( 10, 8 ) default null,
+    lat float( 15, 10 ) default null,
+    lon float( 15, 10 ) default null,
     PRIMARY KEY (id)
 ); 
 """
+# float has parameters (M, D) with M being the total number of digits, and D being the number of digits that come after the decimal point.
+
 
 ## Patient Location Data
 
-create_table_patient_geo = """
-create table if not exists patient_geo (
+create_table_ebp_geo = """
+create table if not exists ebp_geo (
     id int auto_increment,
-    mrn varchar(255) default null,
-    lat float( 10, 8 ) default null,
-    lon float( 10, 8 ) default null,
+    ebp varchar(255) default null,
+    lat float( 15, 10 ) default null,
+    lon float( 15, 10 ) default null,
     PRIMARY KEY (id)
 ); 
 """
@@ -143,6 +128,7 @@ create table if not exists patient_geo (
 
 db_azure.execute(create_table_patients)
 db_azure.execute(create_table_geo)
-db_azure.execute(create_table_patient_geo)
+db_azure.execute(create_table_ebp_geo)
+
 
 print(db_azure.table_names()) ## we can check if our tables went through successfully

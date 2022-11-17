@@ -36,7 +36,7 @@ db_azure = create_engine(connection_string_azure)
 
 #### Check Tables ####
 
-print(db_azure.table_names()) ## we should see 1
+print(db_azure.table_names()) ## we should see 3: patients, geo, ebp_geo
 
 
 
@@ -44,8 +44,6 @@ print(db_azure.table_names()) ## we should see 1
 
 
 ## Patients
-
-## id int auto_increment, mrn varchar(255), first_name varchar(255), last_name varchar(255), dob varchar(255), gender varchar(255), contact_mobile varchar(255), contact_home varchar(255), zip_code varchar(255) 
 
 fake = Faker()
 
@@ -78,7 +76,6 @@ fake_patients = [ {
 } for x in range(100)] ## generate 100 patients
 
 df_fake_patients = pd.DataFrame(fake_patients)
-## drop duplicate mrns (in the case that there are) because mrns should be unique
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['acct'])
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['mrn'])
 
@@ -101,7 +98,7 @@ df_azure.to_csv("./patients.csv")
 
 
 
-## Patient Geo Data
+## Patient Geo Data ##
 
 fake = Faker()
 
@@ -109,14 +106,14 @@ fake_geo = [ {
         'lat': fake.coordinate(center=40.8852, radius=0.01),
         'lon': fake.coordinate(center=-72.3802, radius=0.01)
 
-} for x in range(100)] ## generate 100 coordinates
+} for x in range(70)] ## generate 70 coordinates for patients who live close to Southampton
 
 df_fake_geo = pd.DataFrame(fake_geo)
-## drop duplicate mrns (in the case that there are) because mrns should be unique
+#drop dupe latitudes and longitudes
 df_fake_geo = df_fake_geo.drop_duplicates(subset=['lat', 'lon'])
 
 
-insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)" 
+insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)"
 
 
 for index, row in df_fake_geo.iterrows():
@@ -125,147 +122,59 @@ for index, row in df_fake_geo.iterrows():
 
 df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
 
-df_azure
+fake_geo = [ {
+        'lat': fake.latitude(),
+        'lon': fake.longitude()
+
+} for x in range(30)] ## generate 30 coordinates for patients who don't live in the Hamptons
+
+df_fake_geo = pd.DataFrame(fake_geo)
+df_fake_geo = df_fake_geo.drop_duplicates(subset=['lat', 'lon'])
+
+
+insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)"
+
+
+for index, row in df_fake_geo.iterrows():
+    db_azure.execute(insertQuery, (row['lat'], row['lon']))
+    print("inserted row: ", index)
+
+df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
 
 df_azure.to_csv('./geo.csv')
 
-## id int auto_increment, ndc varchar(255) null unique, generic varchar(255) default null, active_ingredients varchar(255) default null
-
-#### real ndc codes
-ndc_codes = pd.read_csv('https://raw.githubusercontent.com/hantswilliams/FDA_NDC_CODES/main/NDC_2022_product.csv')
-ndc_codes_1k = ndc_codes.sample(n=1000, random_state=1) ## take a sample of 1000 codes from the master list
-## drop duplicates from ndc_codes_1k (ndc should also be unique)
-ndc_codes_1k = ndc_codes_1k.drop_duplicates(subset=['PRODUCTNDC'], keep='first')
-
-insertQuery = "INSERT INTO medications (ndc, generic, active_ingredients) VALUES (%s, %s, %s)"
-
-medRowCount = 0
-for index, row in ndc_codes_1k.iterrows():
-    medRowCount += 1
-    db_azure.execute(insertQuery, (row['PRODUCTNDC'], row['PROPRIETARYNAME'], row['NONPROPRIETARYNAME']))
-    print("inserted row: ", index)
-    ## stop once we have 100 rows
-    if medRowCount == 100:
-        break
-
-df_azure = pd.read_sql_query("SELECT * FROM medications", db_azure)
-
-df_azure
-
-
-## Treatment Procedures
-
-## id int auto_increment, cpt varchar(255) null unique, description varchar(255) default null
-
-cpt_codes = pd.read_csv('https://gist.githubusercontent.com/lieldulev/439793dc3c5a6613b661c33d71fdd185/raw/25c3abcc5c24e640a0a5da1ee04198a824bf58fa/cpt4.csv')
-cpt_codes_1k = cpt_codes.sample(n=1000, random_state=1)
-## drop duplicates from cpt_codes_1k
-cpt_codes_1k = cpt_codes_1k.drop_duplicates(subset=['com.medigy.persist.reference.type.clincial.CPT.code'], keep='first')
-
-insertQuery = "INSERT INTO treatment_procedures (cpt, description) VALUES (%s, %s)"
-
-medRowCount = 0 ## we can repurpose the iteration formula for each table besides the intermediary ones. if we wanted to, we could call this something else, such as treatRowNum
-for index, row in cpt_codes_1k.iterrows():
-    medRowCount += 1
-    db_azure.execute(insertQuery, (row['com.medigy.persist.reference.type.clincial.CPT.code'], row['label']))
-    print("inserted row: ", index)
-    ## stop once we have 100 rows
-    if medRowCount == 100:
-        break
-
-df_azure = pd.read_sql_query("SELECT * FROM treatment_procedures", db_azure)
-
-df_azure
-
-
-## Conditions
-
-##  id int auto_increment, icd10 varchar(255) null unique, description varchar(255) default null
-
-#### real icd10 codes
-icd10codes = pd.read_csv('https://raw.githubusercontent.com/Bobrovskiy/ICD-10-CSV/master/2020/diagnosis.csv')
-list(icd10codes.columns)
-icd10codesShort = icd10codes[['CodeWithSeparator', 'ShortDescription']]
-icd10codesShort_1k = icd10codesShort.sample(n=1000)
-## drop duplicates
-icd10codesShort_1k = icd10codesShort_1k.drop_duplicates(subset=['CodeWithSeparator'], keep='first')
-
-insertQuery = "INSERT INTO conditions (icd10, description) VALUES (%s, %s)"
-
-startingRow = 0
-for index, row in icd10codesShort_1k.iterrows():
-    startingRow += 1
-    print('startingRow: ', startingRow)
-    db_azure.execute(insertQuery, (row['CodeWithSeparator'], row['ShortDescription']))
-    print("inserted row db_azure: ", index)
-    ## stop once we have 100 rows
-    if startingRow == 100:
-        break
-
-df_azure = pd.read_sql_query("SELECT * FROM conditions", db_azure)
-
-df_azure
-
-
-## Social Determinants
-
-##  id int auto_increment, loinc varchar(255) null unique, description varchar(255) default null
-
-loinccodes = pd.read_csv('data/Loinc.csv')
-list(loinccodes.columns)
-loinccodesShort = loinccodes[['LOINC_NUM', 'COMPONENT']]
-loinccodesShort_1k = loinccodesShort.sample(n=1000)
-## drop duplicates
-loinccodesShort_1k = loinccodesShort_1k.drop_duplicates(subset=['LOINC_NUM'], keep='first')
-
-insertQuery = "INSERT INTO social_determinants (loinc, description) VALUES (%s, %s)"
-
-startingRow = 0
-for index, row in loinccodesShort_1k.iterrows():
-    startingRow += 1
-    print('startingRow: ', startingRow)
-    db_azure.execute(insertQuery, (row['LOINC_NUM'], row['COMPONENT']))
-    print("inserted row db_azure: ", index)
-    ## stop once we have 100 rows
-    if startingRow == 100:
-        break
-
-df_azure = pd.read_sql_query("SELECT * FROM social_determinants", db_azure)
-
-df_azure
 
 
 
 
 
 
-## Intermediary Tables ##
 
-## Patient Medications
+#### EBP Geo Data ####
 
-## id int auto_increment, mrn varchar(255) default null, ndc varchar(255) default null
+fake = Faker()
 
-df_medications = pd.read_sql_query("SELECT ndc FROM medications", db_azure) ## we pull ndc from medications and mrn from patients table and push them into dataframes
-df_patients = pd.read_sql_query("SELECT mrn FROM patients", db_azure)
+fake_ebp_geo = [ {
+        'ebp': fake.random_element(elements=('A Matter of Balance', 'Fit & Strong', 'Otago Exercise Program', 'Stay Active & Independent For Life', 'Stepping On', 'Tai Chi for Arthritis')), 
+        'lat': fake.coordinate(center=40.806622, radius=0.06),
+        'lon': fake.coordinate(center=-73.237512, radius=0.4)
 
-## create a dataframe that is stacked and give each patient a random number of medications between 1 and 5
-df_patient_medications = pd.DataFrame(columns=['mrn', 'ndc'])
-for index, row in df_patients.iterrows():
-    df_medications_sample = df_medications.sample(n=random.randint(1, 5)) ## patients will receive a random number of medications between 1 to 5 medications
-    ## add the mrn to the df_medications_sample
-    df_medications_sample['mrn'] = row['mrn']
-    ## append the df_medications_sample to df_patient_medications
-    df_patient_medications = df_patient_medications.append(df_medications_sample)
+} for x in range(50)] ## generate 50 EBPs
 
-print(df_patient_medications.head(20)) ## check our work
+df_fake_ebp_geo = pd.DataFrame(fake_ebp_geo)
+## drop duplicate mrns (in the case that there are) because mrns should be unique
+df_fake_ebp_geo = df_fake_ebp_geo.drop_duplicates(subset=['lat', 'lon'])
 
-## now lets assign drugs to patients randomly
-insertQuery = "INSERT INTO patient_medications (mrn, ndc) VALUES (%s, %s)"
 
-for index, row in df_patient_medications.iterrows():
-    db_azure.execute(insertQuery, (row['mrn'], row['ndc']))
+insertQuery = "INSERT INTO ebp_geo (ebp, lat, lon) VALUES (%s, %s, %s)"
+
+
+for index, row in df_fake_ebp_geo.iterrows():
+    db_azure.execute(insertQuery, (row['ebp'], row['lat'], row['lon']))
     print("inserted row: ", index)
 
-df_azure = pd.read_sql_query("SELECT * FROM patient_medications", db_azure)
+df_azure = pd.read_sql_query("SELECT * FROM ebp_geo", db_azure)
 
 df_azure
+
+df_azure.to_csv('./ebpgeo.csv')
