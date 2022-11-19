@@ -25,7 +25,6 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
-connection_string_azure = 'mysql+pymysql://zhou:ahi2022!@mysql-testenvironment.mysql.database.azure.com:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 

@@ -91,7 +91,7 @@ df_azure = pd.read_sql_query("SELECT * FROM patients", db_azure)
 
 df_azure ## we'll use df_azure to check that our populated tables went through. we can redefine it repeatedly as we proceed
 
-df_azure.to_csv("./patients.csv")
+df_azure.to_csv("./data/patients.csv")
 
 
 
@@ -141,7 +141,7 @@ for index, row in df_fake_geo.iterrows():
 
 df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
 
-df_azure.to_csv('./geo.csv')
+df_azure.to_csv('./data/geo.csv')
 
 
 
@@ -177,4 +177,4 @@ df_azure = pd.read_sql_query("SELECT * FROM ebp_geo", db_azure)
 
 df_azure
 
-df_azure.to_csv('./ebpgeo.csv')
+df_azure.to_csv('./data/ebpgeo.csv')

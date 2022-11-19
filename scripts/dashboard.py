@@ -11,7 +11,7 @@ st.title('Southampton Falls Prevention 2022')
 #### Dashboard Header and Description ####
 
 
-df = pd.read_csv('patients.csv')
+df = pd.read_csv('./data/patients.csv')
 
 st.header('Dashboard')
 
@@ -37,7 +37,7 @@ st.dataframe(df)
 
 st.subheader('Current Southampton Evidence-Based Programs')
 
-df = pd.read_csv('masterlistebp.csv')
+df = pd.read_csv('./data/masterlistebp.csv')
 
 df = df[df['status'] == 'current']
 
@@ -49,7 +49,7 @@ st.caption('A list of EBPs currently approved by Southampton Falls Prevention')
 
 st.subheader('Suggested Southampton Evidence-Based Programs')
 
-df = pd.read_csv('masterlistebp.csv')
+df = pd.read_csv('./data/masterlistebp.csv')
 
 df = df[df['status'] == 'suggested']
 
@@ -64,7 +64,7 @@ st.caption('A list of EBPs suggested for approval by Southampton Falls Preventio
 
 st.subheader('Patient Geo Data')
 
-df = pd.read_csv('patientgeo.csv')
+df = pd.read_csv('./data/patientgeo.csv')
 
 st.map(df)
 
@@ -80,7 +80,7 @@ st.caption('A map of patient addresses to aid in pairing them with appropriate e
 
 st.subheader('Evidence-Based Programs Geo Data')
 
-df = pd.read_csv('ebpgeo.csv')
+df = pd.read_csv('./data/ebpgeo.csv')
 
 st.map(df)
 
@@ -94,7 +94,7 @@ st.caption('A map of EBPs to allow for easy pairing of discharged patients to EB
 
 #### Barchart - Patients by Age ####
 
-df = pd.read_csv('patients.csv')
+df = pd.read_csv('./data/patients.csv')
 
 df = df['age'].value_counts()
 
