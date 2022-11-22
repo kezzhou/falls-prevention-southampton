@@ -21,15 +21,16 @@ import random
 
 load_dotenv()
 
-AZURE_MYSQL_HOSTNAME = os.getenv("AZURE_MYSQL_HOSTNAME")
-AZURE_MYSQL_USER = os.getenv("AZURE_MYSQL_USERNAME")
-AZURE_MYSQL_PASSWORD = os.getenv("AZURE_MYSQL_PASSWORD")
-AZURE_MYSQL_DATABASE = os.getenv("AZURE_MYSQL_DATABASE")
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_USERNAME = os.getenv("MYSQL_USERNAME")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 
 
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
+connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/patient_portal'
 db_azure = create_engine(connection_string_azure)
 
 

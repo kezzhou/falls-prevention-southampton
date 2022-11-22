@@ -17,14 +17,15 @@ import os
 
 load_dotenv()
 
-MYSQL_HOSTNAME = os.getenv("MYSQL_HOSTNAME")
-MYSQL_USER = os.getenv("MYSQL_USERNAME")
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_USERNAME = os.getenv("MYSQL_USERNAME")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
+connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/patient_portal'
 db_azure = create_engine(connection_string_azure)
 
 
