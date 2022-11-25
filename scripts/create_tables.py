@@ -25,7 +25,7 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
-connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/patient_portal'
+connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 
@@ -71,6 +71,7 @@ create table if not exists patients (
     middle_name varchar(255) default null,
     dob varchar(255) default null,
     age varchar(255) default null,
+    gender varchar(255) default null,
     address1 varchar(255) default null,
     address2 varchar(255) default null,
     city varchar(255) default null,
@@ -94,9 +95,10 @@ create table if not exists patients (
 
 ## Raw Geo Location Data
 
-create_table_geo = """
-create table if not exists geo (
+create_table_patient_geo = """
+create table if not exists patient_geo (
     id int auto_increment,
+    mrn varchar(255) null unique,
     lat float( 15, 10 ) default null,
     lon float( 15, 10 ) default null,
     PRIMARY KEY (id)
@@ -127,7 +129,7 @@ create table if not exists ebp_geo (
 #### Execute our written commands with Python ####
 
 db_azure.execute(create_table_patients)
-db_azure.execute(create_table_geo)
+db_azure.execute(create_table_patient_geo)
 db_azure.execute(create_table_ebp_geo)
 
 

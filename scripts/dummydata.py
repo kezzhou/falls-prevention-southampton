@@ -30,7 +30,7 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 #connection_string_azure = f'mysql+pymysql://{AZURE_MYSQL_USER}:{AZURE_MYSQL_PASSWORD}@{AZURE_MYSQL_HOSTNAME}:3306/{AZURE_MYSQL_DATABASE}'
 #db_azure = create_engine(connection_string_azure)
 
-connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/patient_portal'
+connection_string_azure = f'mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:3306/falls_prevention'
 db_azure = create_engine(connection_string_azure)
 
 
@@ -57,7 +57,8 @@ fake_patients = [ {
         'last_name':fake.last_name(), 
         'first_name':fake.first_name(),
         'middle_name': fake.random_element(elements=('L', 'R', 'G', 'J', 'A', 'M', 'V', 'W', 'T', 'D', 'E', 'S', 'P', 'C', '')),
-        'dob':(fake.date_between(start_date='-94y', end_date='-65y')).strftime("%Y-%m-%d"),
+        'dob':(fake.date_between(start_date='-94y', end_date='-35y')).strftime("%Y-%m-%d"),
+        'gender': fake.random_element(elements=('m', 'f')),
         'address1': fake.street_address(),
         'city': fake.city(),
         'state': fake.state(),
@@ -66,7 +67,7 @@ fake_patients = [ {
         'cell':fake.phone_number(),
         'ed_arrival':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d"),
         'discharge':(fake.date_between(start_date='-1y', end_date='-0y')).strftime("%Y-%m-%d"),
-        'er_disposition': fake.random_element(elements=('home', 'fasttrac')),
+        'er_disposition': fake.random_element(elements=('home', 'fasttrac', 'other')),
         'final_disch_disp_desc': fake.random_element(elements=('DISCHARGED HOME FROM HOSPITAL FAST TRACK AREA', 'DISCHARGED TO HOME OR SELF CARE (ROUTINE DISCHARGE)', 'DISCHARGED TO SKILLED NURSING FACILITY FOR SKILLED CARE(SNF)', 'DISCH HOME UNDER CARE OF HOME HEALTH AGENCY ANTICIPATING SNF')),
         'pcp_number': str(uuid.uuid4())[:6],
         'pcp_name':fake.name(),
@@ -74,18 +75,18 @@ fake_patients = [ {
         'cpsi_chief_complaint': fake.random_element(elements=('fall', ''))
 
 
-} for x in range(100)] ## generate 100 patients
+} for x in range(200)] ## generate 200 patients
 
 df_fake_patients = pd.DataFrame(fake_patients)
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['acct'])
 df_fake_patients = df_fake_patients.drop_duplicates(subset=['mrn'])
 
 
-insertQuery = "INSERT INTO patients (acct, mrn, svc, stay_type, last_name, first_name, middle_name, dob, address1, city, state, zip, phone, cell, ed_arrival, discharge, er_disposition, final_disch_disp_desc, pcp_number, pcp_name, er_log_chief_complaint, cpsi_chief_complaint) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
+insertQuery = "INSERT INTO patients (acct, mrn, svc, stay_type, last_name, first_name, middle_name, dob, gender, address1, city, state, zip, phone, cell, ed_arrival, discharge, er_disposition, final_disch_disp_desc, pcp_number, pcp_name, er_log_chief_complaint, cpsi_chief_complaint) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" ## %s indicates a dynamic value
 
 
 for index, row in df_fake_patients.iterrows():
-    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['svc'], row['stay_type'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['discharge'], row['er_disposition'], row['final_disch_disp_desc'], row['pcp_number'], row['pcp_name'], row['er_log_chief_complaint'], row['cpsi_chief_complaint']))
+    db_azure.execute(insertQuery, (row['acct'], row['mrn'], row['svc'], row['stay_type'], row['last_name'], row['first_name'], row['middle_name'], row['dob'], row['gender'], row['address1'], row['city'], row['state'], row['zip'],row['phone'], row['cell'], row['ed_arrival'], row['discharge'], row['er_disposition'], row['final_disch_disp_desc'], row['pcp_number'], row['pcp_name'], row['er_log_chief_complaint'], row['cpsi_chief_complaint']))
     print("inserted row: ", index)
 
 df_azure = pd.read_sql_query("SELECT * FROM patients", db_azure)
@@ -103,46 +104,46 @@ df_azure.to_csv("./data/patients.csv")
 
 fake = Faker()
 
-fake_geo = [ {
+fake_patient_geo = [ {
         'lat': fake.coordinate(center=40.8852, radius=0.01),
         'lon': fake.coordinate(center=-72.3802, radius=0.01)
 
 } for x in range(70)] ## generate 70 coordinates for patients who live close to Southampton
 
-df_fake_geo = pd.DataFrame(fake_geo)
+df_fake_patient_geo = pd.DataFrame(fake_patient_geo)
 #drop dupe latitudes and longitudes
-df_fake_geo = df_fake_geo.drop_duplicates(subset=['lat', 'lon'])
+df_fake_patient_geo = df_fake_patient_geo.drop_duplicates(subset=['lat', 'lon'])
 
 
-insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)"
+insertQuery = "INSERT INTO patient_geo (lat, lon) VALUES (%s, %s)"
 
 
-for index, row in df_fake_geo.iterrows():
+for index, row in df_fake_patient_geo.iterrows():
     db_azure.execute(insertQuery, (row['lat'], row['lon']))
     print("inserted row: ", index)
 
-df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
+df_azure = pd.read_sql_query("SELECT * FROM patient_geo", db_azure)
 
-fake_geo = [ {
+fake_patient_geo = [ {
         'lat': fake.latitude(),
         'lon': fake.longitude()
 
 } for x in range(30)] ## generate 30 coordinates for patients who don't live in the Hamptons
 
-df_fake_geo = pd.DataFrame(fake_geo)
-df_fake_geo = df_fake_geo.drop_duplicates(subset=['lat', 'lon'])
+df_fake_patient_geo = pd.DataFrame(fake_patient_geo)
+df_fake_patient_geo = df_fake_patient_geo.drop_duplicates(subset=['lat', 'lon'])
 
 
-insertQuery = "INSERT INTO geo (lat, lon) VALUES (%s, %s)"
+insertQuery = "INSERT INTO patient_geo (lat, lon) VALUES (%s, %s)"
 
 
-for index, row in df_fake_geo.iterrows():
+for index, row in df_fake_patient_geo.iterrows():
     db_azure.execute(insertQuery, (row['lat'], row['lon']))
     print("inserted row: ", index)
 
-df_azure = pd.read_sql_query("SELECT * FROM geo", db_azure)
+df_azure = pd.read_sql_query("SELECT * FROM patient_geo", db_azure)
 
-df_azure.to_csv('./data/geo.csv')
+df_azure.to_csv('./data/patientgeo.csv')
 
 
 
