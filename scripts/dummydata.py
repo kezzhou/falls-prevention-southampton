@@ -180,3 +180,62 @@ df_azure = pd.read_sql_query("SELECT * FROM ebp_geo", db_azure)
 df_azure
 
 df_azure.to_csv('./data/ebpgeo.csv')
+
+
+## Patient Consent ### 
+
+fake = Faker()
+
+fake_patient_consent = [ {
+        'consent_given': fake.random_element(elements=('yes', 'no'))
+
+
+} for x in range(85)] ## generate 85 yes-nos for the patients above 65
+
+df_fake_patient_consent = pd.DataFrame(fake_patient_consent)
+
+
+insertQuery = "INSERT INTO patient_consent (consent_given) VALUES (%s)"
+
+
+for index, row in df_fake_patient_consent.iterrows():
+    db_azure.execute(insertQuery, (row['consent_given']))
+    print("inserted row: ", index)
+
+df_azure = pd.read_sql_query("SELECT * FROM patient_consent", db_azure)
+
+df_azure ## we'll use df_azure to check that our populated tables went through. we can redefine it repeatedly as we proceed
+
+df_azure.to_csv("./data/patientconsent.csv")
+
+
+## Patient Tracker ##
+
+
+fake = Faker()
+
+fake_patient_tracker = [ {
+        'ncoa': fake.random_element(elements=('low','med', 'hi')),
+        'ebp': fake.random_element(elements=('A Matter of Balance', 'Bingocize', 'Enhance Fitness', 'Fit & Strong', 'Healthy Steps for Older Adults', 'Otago Exercise Program', 'Stay Active & Independent For Life', 'Stepping On', 'Tai Chi for Arthritis')), 
+        'ebp_address': fake.address(),
+        '3_month_contact_made': fake.random_element(elements=('yes', 'no')),
+        '6_month_contact_made': fake.random_element(elements=('yes', 'no')),
+        '9_month_contact_made': fake.random_element(elements=('yes', 'no')),
+        '12_month_contact_made': fake.random_element(elements=('yes', 'no')),
+
+} for x in range(40)] ## generate 40 fields for patients who gave consent to falls prevention
+
+df_fake_patient_tracker = pd.DataFrame(fake_patient_tracker)
+
+insertQuery = "INSERT INTO patient_tracker (ncoa, ebp, ebp_address, 3_month_contact_made, 6_month_contact_made, 9_month_contact_made, 12_month_contact_made) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+
+
+for index, row in df_fake_patient_tracker.iterrows():
+    db_azure.execute(insertQuery, (row['ncoa'], row['ebp'], row['ebp_address'], row['3_month_contact_made'], row['6_month_contact_made'], row['9_month_contact_made'], row['12_month_contact_made']))
+    print("inserted row: ", index)
+
+df_azure = pd.read_sql_query("SELECT * FROM patient_tracker", db_azure)
+
+df_azure ## we'll use df_azure to check that our populated tables went through. we can redefine it repeatedly as we proceed
+
+df_azure.to_csv("./data/patient_tracker.csv")

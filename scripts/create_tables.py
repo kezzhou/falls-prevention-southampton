@@ -119,6 +119,45 @@ create table if not exists ebp_geo (
 ); 
 """
 
+create_table_patient_consent = """
+create table if not exists patient_consent (
+    id int auto_increment,
+    mrn varchar(255) null unique,
+    last_name varchar(255) default null,
+    first_name varchar(255) default null,
+    middle_name varchar(255) default null,
+    phone varchar(255) default null,
+    cell varchar(255) default null,
+    consent_given varchar(255) default null,
+    PRIMARY KEY (id)
+); 
+"""
+
+create_table_patient_tracker = """
+create table if not exists patient_tracker (
+    id int auto_increment,
+    mrn varchar(255) null unique,
+    last_name varchar(255) default null,
+    first_name varchar(255) default null,
+    middle_name varchar(255) default null,
+    phone varchar(255) default null,
+    cell varchar(255) default null,
+    ncoa varchar(255) default null,
+    ebp varchar(255) default null,
+    ebp_address varchar(255) default null,
+    discharge varchar(255) default null,
+    3_month_date varchar(255) default null,
+    3_month_contact_made varchar(255) default null,
+    6_month_date varchar(255) default null,
+    6_month_contact_made varchar(255) default null,
+    9_month_date varchar(255) default null,
+    9_month_contact_made varchar(255) default null,
+    12_month_date varchar(255) default null,
+    12_month_contact_made varchar(255) default null,
+    PRIMARY KEY (id)
+); 
+"""
+
 ## we use null unique to signify that there should be no repeating values
 ## this will be prevalent with unique identifiers, whether it's drug codes or social determinant codes
 ## we use default null to signify that the default value for an empty cell is null
@@ -131,6 +170,9 @@ create table if not exists ebp_geo (
 db_azure.execute(create_table_patients)
 db_azure.execute(create_table_patient_geo)
 db_azure.execute(create_table_ebp_geo)
+db_azure.execute(create_table_patient_consent)
+db_azure.execute(create_table_patient_tracker)
+
 
 
 print(db_azure.table_names()) ## we can check if our tables went through successfully
