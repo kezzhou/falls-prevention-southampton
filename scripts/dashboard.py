@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import pgeocode as pg
 import plotly_express as px
+import base64
 
 #### Title ####
 
@@ -87,6 +88,31 @@ st.area_chart(df)
 
 ## can't get streamlit to recognize the month-year dates as the x-axis values. this may be an issue with value_counts(), but it works fine for the barchart.
 ## the same problem is present with plotly ex line charts.
+
+
+
+
+### Header and Caption ####
+
+st.header('Tableau')
+st.caption('In-depth Tableau analysis with multiple patient parameters')
+
+def show_pdf(file_path):
+    with open(file_path,"rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="800" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
+show_pdf('../data/tableau.pdf')
+
+with open("../data/tableau.pdf", "rb") as pdf_file:
+    PDFbyte = pdf_file.read()
+
+st.download_button(label="Download File", 
+        data=PDFbyte,
+        file_name="tableau.pdf",
+        mime='application/octet-stream')
+
 
 ### Header ###
 
